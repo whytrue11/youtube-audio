@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="BottomSheetDialogTheme"
+        parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:navigationBarColor">?attr/colorOnPrimary</item>
+        <item name="bottomSheetStyle">@style/BottomSheetDialogStyle</item>
+    </style>
+    <style name="BottomSheetDialogStyle"
+        parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/background_bottom_sheet</item>
+    </style>
+
+    <style name="AlertDialogTheme"
+        parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/background_alert_dialog</item>
+    </style>
+
+    <style name="ProgressDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/background_alert_dialog</item>
+    </style>
+</resources>

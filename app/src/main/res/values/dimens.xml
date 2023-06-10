@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="player_bar_height">58dp</dimen>
+    <dimen name="padding_top_bottom">8dp</dimen>
+    <dimen name="big_padding_left_right">32dp</dimen>
+    <dimen name="medium_padding_left_right">20dp</dimen>
+</resources>

@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/background_bottom_sheet"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/big_padding_left_right"
+    android:paddingTop="@dimen/padding_top_bottom"
+    android:paddingRight="@dimen/big_padding_left_right"
+    android:paddingBottom="@dimen/padding_top_bottom">
+
+    <TextView
+        android:id="@+id/playlist_choose_title_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/choose_playlist"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <ListView
+        android:id="@+id/playlist_choose_list_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

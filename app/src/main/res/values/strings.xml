@@ -3,4 +3,32 @@
     <string name="start_button">Start</string>
     <string name="back_button">Back</string>
     <string name="second_screen">Second screen</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="home">Home</string>
+    <string name="playlists">Playlists</string>
+    <string name="search">Search</string>
+    <string name="audio_image">Audio image</string>
+    <string name="playlist_absence">There are no playlists here yet</string>
+    <string name="choose">Choose</string>
+    <string name="play_next">Play next</string>
+    <string name="add_to_the_end_of_queue">Add to the end of queue</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="audio_option_button">Audio option button</string>
+    <string name="choose_playlist">Choose playlist</string>
+    <string name="input_playlist_name_to_add">Input playlist name to add</string>
+    <string name="add_playlist">Add playlist</string>
+    <string name="title">Title</string>
+    <string name="channel">Channel</string>
+    <string name="play_next_audio">PLay next audio</string>
+    <string name="play_or_pause_audio">Play or pause audio</string>
+    <string name="play_previous_audio">Play previous audio</string>
+    <string name="empty_name_not_allowed">Empty names are not allowed</string>
+    <string name="playlist_exist">The playlist already exists</string>
+    <string name="playlist_and_mark">Playlist \'</string>
+    <string name="mark_and_added">\' added</string>
+    <string name="first_need_to_create_playlist">First need to create a playlist</string>
+    <string name="player_not_active">Player is not active</string>
+    <string name="error">Error</string>
+    <string name="queue">Queue</string>
 </resources>
