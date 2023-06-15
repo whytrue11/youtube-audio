@@ -30,10 +30,15 @@ import java.util.List;
 
 public class PlaylistFragment extends Fragment {
   private ProgressDialog progressDialog;
+  private MusicService musicService;
+  private TextView text;
+
+  //Recycler
   private RecyclerView recyclerView;
   private PlaylistMetaAdapter playlistAdapter;
   private AudioQueueAdapter queueAdapter;
-  private MusicService musicService;
+
+  //ActionBar
   private ActionBar actionBar;
   private CharSequence prevTitle;
 
@@ -51,24 +56,18 @@ public class PlaylistFragment extends Fragment {
     actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
     actionBar.setHomeAsUpIndicator(R.drawable.round_arrow_back_24);
     setHasOptionsMenu(true);
-
-    //Show action bar logo
-    /*actionBar.setDisplayShowHomeEnabled(true);
-    actionBar.setDisplayUseLogoEnabled(true);
-    actionBar.setLogo(R.drawable.baseline_music_video_24);*/
-
-    //actionBar.setHomeButtonEnabled(true);
   }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_playlist, container, false);
+    text = view.findViewById(R.id.playlist_error_text_id);
 
     initRecyclerView(view);
 
     Button addPlaylistButton = view.findViewById(R.id.playlist_add_playlist);
     addPlaylistButton.setOnClickListener(v -> PlaylistController.
-            showAddPlaylistDialog(getContext(), playlistAdapter));
+            showAddPlaylistDialog(getContext(), playlistAdapter, text));
 
     return view;
   }
@@ -90,24 +89,17 @@ public class PlaylistFragment extends Fragment {
     return super.onOptionsItemSelected(item);
   }
 
-  private void returnBack() {
-    recyclerView.setAdapter(playlistAdapter);
-    if (prevTitle != null) actionBar.setTitle(prevTitle);
-    actionBar.setDisplayHomeAsUpEnabled(false);
-  }
-
   private void initRecyclerView(View view) {
     recyclerView = view.findViewById(R.id.playlist_list);
 
     if (playlistAdapter == null || playlistAdapter.getItemCount() == 0) {
       playlistAdapter = new PlaylistMetaAdapter(new ArrayList<>(),
-              (playlists, playlistPos) -> showPlaylistAudios(playlists, playlistPos));
+              (playlists, playlistPos) -> showPlaylistAudios(playlists, playlistPos), text);
       recyclerView.setAdapter(playlistAdapter);
     }
     updatePlaylistAdapterData();
 
     if (playlistAdapter.getItemCount() == 0) {
-      TextView text = view.findViewById(R.id.playlist_error_text_id);
       text.setText(R.string.playlist_absence);
     }
   }
@@ -122,7 +114,7 @@ public class PlaylistFragment extends Fragment {
     String playlistName = playlists.get(playlistPos).getName();
     try {
       PlaylistController.loadPlaylistData(getContext(), null,
-              playlistName, progressDialog, queueAdapter, recyclerView);
+              playlistName, progressDialog, queueAdapter, recyclerView, text);
     }
     catch (IOException e) {
       e.printStackTrace();
@@ -147,5 +139,12 @@ public class PlaylistFragment extends Fragment {
 
   private MusicService getMusicService() {
     return musicService = musicService == null ? ((MainActivity) getActivity()).getMusicService() : musicService;
+  }
+
+  private void returnBack() {
+    text.setText("");
+    recyclerView.setAdapter(playlistAdapter);
+    if (prevTitle != null) actionBar.setTitle(prevTitle);
+    actionBar.setDisplayHomeAsUpEnabled(false);
   }
 }

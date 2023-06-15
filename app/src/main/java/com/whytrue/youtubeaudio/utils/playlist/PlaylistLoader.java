@@ -3,6 +3,7 @@ package com.whytrue.youtubeaudio.utils.playlist;
 import com.whytrue.youtubeaudio.entities.Audio;
 import com.whytrue.youtubeaudio.entities.PlaylistMeta;
 import com.whytrue.youtubeaudio.tasks.PlaylistImagesLoaderYT;
+import com.whytrue.youtubeaudio.utils.Constants;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,7 +23,6 @@ public final class PlaylistLoader {
   private final String path;
   private List<PlaylistMeta> playlistsMeta;
   private List<String> curPlaylist;
-
 
   private PlaylistLoader(String path) throws IOException {
     this.path = path;
@@ -46,7 +46,7 @@ public final class PlaylistLoader {
     return curPlaylist;
   }
 
-  public List<String> extractPlaylistByName(String name) throws IOException {
+  public List<String> getPlaylist(String name) throws IOException {
     return extractPlaylist(path + "/" + PREFIX + name);
   }
 
@@ -58,8 +58,19 @@ public final class PlaylistLoader {
     savePlaylist(playlist, path + "/" + PREFIX + name);
   }
 
+  public void deletePlaylist(String name) {
+    for (PlaylistMeta meta : playlistsMeta) {
+      if (meta.getName().equals(name)) {
+        playlistsMeta.remove(meta);
+        File playlistFile = new File(path + "/" + PREFIX + name);
+        playlistFile.delete();
+        break;
+      }
+    }
+  }
+
   public void addAudio(String playlistName, Audio audio) throws IOException {
-    for (PlaylistMeta meta: playlistsMeta) {
+    for (PlaylistMeta meta : playlistsMeta) {
       if (meta.getName().equals(playlistName)) {
         meta.setCount(meta.getCount() + 1);
 
@@ -126,7 +137,7 @@ public final class PlaylistLoader {
         playlistsMeta.add(meta);
       }
     }
-    new PlaylistImagesLoaderYT(null, playlistsMeta).execute();
+    new PlaylistImagesLoaderYT(null, playlistsMeta, Constants.PLAYLIST_IMAGE_QUALITY).execute();
   }
 
   private void extractCurPlaylist() throws IOException {

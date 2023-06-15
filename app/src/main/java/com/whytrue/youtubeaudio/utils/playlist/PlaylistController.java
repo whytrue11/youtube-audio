@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +23,7 @@ import com.whytrue.youtubeaudio.services.MusicService;
 import com.whytrue.youtubeaudio.tasks.AudioDataLoaderYT;
 import com.whytrue.youtubeaudio.ui.adapters.AudioQueueAdapter;
 import com.whytrue.youtubeaudio.ui.adapters.PlaylistMetaAdapter;
+import com.whytrue.youtubeaudio.utils.Constants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ import java.util.ArrayList;
 public class PlaylistController {
   public static void loadPlaylistData(Context context, GoogleAccountCredential credential,
                                       String playlistName, ProgressDialog progressDialog,
-                                      AudioQueueAdapter queueAdapter, RecyclerView recyclerView) throws IOException {
+                                      AudioQueueAdapter queueAdapter, RecyclerView recyclerView, TextView text) throws IOException {
     PlaylistLoader playlistLoader = null;
     try {
       playlistLoader = PlaylistLoader.getInstance(context.getFilesDir().getPath());
@@ -42,18 +44,18 @@ public class PlaylistController {
       return;
     }
 
-    new AudioDataLoaderYT(context, credential, playlistLoader.extractPlaylistByName(playlistName),
-            progressDialog, queueAdapter, recyclerView)
+    new AudioDataLoaderYT(context, credential, playlistLoader.getPlaylist(playlistName),
+            progressDialog, queueAdapter, recyclerView, text, Constants.QUEUE_IMAGE_QUALITY)
             .execute();
   }
 
-  public static void showAddPlaylistDialog(Context context, PlaylistMetaAdapter adapter) {
+  public static void showAddPlaylistDialog(Context context, PlaylistMetaAdapter adapter, TextView text) {
     View view = LayoutInflater.from(context).inflate(R.layout.dialog_playlist_add, null);
     AlertDialog dialog = new AlertDialog.Builder(context).create();
     dialog.setView(view);
 
     view.findViewById(R.id.playlist_add_dialog_ok).setOnClickListener(v ->
-            readNameAndAddPlaylist(view, context, dialog, adapter));
+            readNameAndAddPlaylist(view, context, dialog, adapter, text));
 
     dialog.show();
   }
@@ -143,7 +145,7 @@ public class PlaylistController {
     dialog.dismiss();
   }
 
-  private static void readNameAndAddPlaylist(View view, Context context, AlertDialog dialog, PlaylistMetaAdapter adapter) {
+  private static void readNameAndAddPlaylist(View view, Context context, AlertDialog dialog, PlaylistMetaAdapter adapter, TextView text) {
     EditText editText = view.findViewById(R.id.playlist_add_dialog_name_id);
     String playlistName = editText.getText().toString();
 
@@ -168,6 +170,7 @@ public class PlaylistController {
       playlistLoader.savePlaylist(playlistName, new ArrayList<>(1));
 
       adapter.addPlaylistItem(newPlaylist);
+      text.setText("");
     }
     catch (IOException e) {
       e.printStackTrace();

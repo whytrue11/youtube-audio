@@ -7,6 +7,10 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class Constants {
+  public static Utils.ImageQuality HOME_AUDIO_IMAGE_QUALITY = Utils.ImageQuality.STANDARD;
+  public static Utils.ImageQuality PLAYLIST_IMAGE_QUALITY = Utils.ImageQuality.MEDIUM;
+  public static Utils.ImageQuality QUEUE_IMAGE_QUALITY = Utils.ImageQuality.DEFAULT;
+  public static int REWIND_TIME = 10000;
   public static final int WIDTH_RATIO = 16;
   public static final int HEIGHT_RATIO = 9;
   public static final String START_YOUTUBE_URL = "https://youtu.be/";

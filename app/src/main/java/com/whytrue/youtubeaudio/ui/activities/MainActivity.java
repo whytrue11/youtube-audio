@@ -6,27 +6,32 @@ import static com.whytrue.youtubeaudio.utils.Constants.WIDTH_RATIO;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.squareup.picasso.Picasso;
 import com.whytrue.youtubeaudio.AudioQueue;
@@ -34,16 +39,38 @@ import com.whytrue.youtubeaudio.R;
 import com.whytrue.youtubeaudio.callbacks.ChangeCurAudioListener;
 import com.whytrue.youtubeaudio.callbacks.PausedListener;
 import com.whytrue.youtubeaudio.callbacks.PlayingListener;
+import com.whytrue.youtubeaudio.callbacks.RewindListener;
 import com.whytrue.youtubeaudio.entities.Audio;
 import com.whytrue.youtubeaudio.services.MusicService;
+import com.whytrue.youtubeaudio.utils.Constants;
+import com.whytrue.youtubeaudio.utils.playlist.PlaylistController;
 import com.whytrue.youtubeaudio.utils.playlist.PlaylistLoader;
 import com.yausername.youtubedl_android.YoutubeDL;
 import com.yausername.youtubedl_android.YoutubeDLException;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
   private static final String LOG_TAG = "MainActivity";
+
+  //PlayerBar
+  private FrameLayout playerBarView;
+  private LinearLayout playerBarExtensionView;
+  private BottomSheetBehavior bottomSheetBehavior;
+  boolean isStarted = false;
+  //--Fields
+  ImageButton playPlayerBarButton;
+  LinearProgressIndicator progressIndicator;
+  TextView titlePLayerBar;
+  TextView channelPLayerBar;
+  ImageView imagePlayerBar;
+  ImageButton extensionPlayPlayerBarButton;
+  SeekBar extensionProgressIndicator;
+  TextView extensionAllTime;
+  TextView extensionCutTime;
+  TextView extensionTitle;
+  TextView extensionChannel;
 
   //Music Service
   private MusicService musicService;
@@ -61,27 +88,137 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     Log.i(LOG_TAG, "Create");
 
-    BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.sheet));
-    bottomSheetBehavior.setHideable(false);
-    bottomSheetBehavior.setPeekHeight(200);
-    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-
+    initPlayerBar();
     initBottomNavigation();
     initYoutubeDl();
     initPlaylists();
     initMusicService();
-
-    findViewById(R.id.player_bar).setVisibility(View.GONE);
-    findViewById(R.id.player_bar).setOnClickListener(v ->
-            showBottomDialog());
   }
 
   @Override
-  public void onStop() {
-    super.onStop();
+  public void onDestroy() {
+    super.onDestroy();
     if (!musicServiceBound) return;
     unbindService(musicServiceConnection);
     musicServiceBound = false;
+  }
+
+  public void setClickable(View view, boolean clickable) {
+    if (view != null) {
+      view.setClickable(clickable);
+      if (view instanceof ViewGroup) {
+        ViewGroup vg = ((ViewGroup) view);
+        for (int i = 0; i < vg.getChildCount(); i++) {
+          setClickable(vg.getChildAt(i), clickable);
+        }
+      }
+    }
+  }
+  private void initPlayerBar() {
+    playerBarView = findViewById(R.id.player_bar_view);
+    playerBarExtensionView = findViewById(R.id.player_bar_extension_view);
+
+    playPlayerBarButton = findViewById(R.id.player_bar_play_button);
+    progressIndicator = findViewById(R.id.player_bar_progress);
+    titlePLayerBar = findViewById(R.id.player_bar_audio_title);
+    channelPLayerBar = findViewById(R.id.player_bar_channel);
+    imagePlayerBar = findViewById(R.id.player_bar_image);
+
+    extensionPlayPlayerBarButton = findViewById(R.id.player_bar_extension_play_button);
+    extensionProgressIndicator = findViewById(R.id.player_bar_extension_progress);
+    extensionAllTime = findViewById(R.id.player_bar_extension_alltime);
+    extensionCutTime = findViewById(R.id.player_bar_extension_curtime);
+    extensionTitle = findViewById(R.id.player_bar_extension_audio_title);
+    extensionChannel = findViewById(R.id.player_bar_extension_channel);
+
+    //TODO: Сделать нижнюю панель не кликабельной или что-то другое
+    playerBarView.setOnTouchListener(new View.OnTouchListener() {
+      @Override
+      public boolean onTouch(View view, MotionEvent motionEvent) {
+        return true;
+      }
+    });
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      playerBarView.setRenderEffect(RenderEffect.createBlurEffect(
+              50, 50, Shader.TileMode.CLAMP));
+    }
+    else {
+      playerBarView.setAlpha(0.5f);
+    }
+
+    playerBarExtensionView.setAlpha(0);
+
+    bottomSheetBehavior = BottomSheetBehavior.from(findViewById(R.id.slide_up_panel));
+    bottomSheetBehavior.setPeekHeight((int) getResources().getDimension(R.dimen.player_bar_height));
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    bottomSheetBehavior.setHideable(false);
+    bottomSheetBehavior.setDraggable(false);
+
+    bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @Override
+      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+      }
+
+      @Override
+      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+        playerBarView.setAlpha(1 - slideOffset);
+        playerBarExtensionView.setAlpha(slideOffset);
+      }
+    });
+
+    ImageButton prevPlayerBarButton = findViewById(R.id.player_bar_prev_button);
+    ImageButton nextPlayerBarButton = findViewById(R.id.player_bar_next_button);
+
+    playPlayerBarButton.setOnClickListener(v -> musicService.playOrPause());
+    prevPlayerBarButton.setOnClickListener(v -> musicService.playPrev());
+    nextPlayerBarButton.setOnClickListener(v -> musicService.playNext());
+    playerBarView.setOnClickListener(v -> bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED));
+
+    //Extension
+    ImageButton extensionPrevPlayerBarButton = findViewById(R.id.player_bar_extension_prev_button);
+    ImageButton extensionNextPlayerBarButton = findViewById(R.id.player_bar_extension_next_button);
+    ImageButton extensionRewindBackPlayerBarButton = findViewById(R.id.player_bar_extension_rewind_back_button);
+    ImageButton extensionRewindForwardPlayerBarButton = findViewById(R.id.player_bar_extension_rewind_forward_button);
+    ImageButton extensionOptionPLayerBarButton = findViewById(R.id.player_bar_extension_audio_option_button);
+    ImageButton extensionWrapPlayerBarButton = findViewById(R.id.player_bar_extension_wrap_button);
+
+    extensionPlayPlayerBarButton.setOnClickListener(v -> musicService.playOrPause());
+    extensionPrevPlayerBarButton.setOnClickListener(v -> musicService.playPrev());
+    extensionNextPlayerBarButton.setOnClickListener(v -> musicService.playNext());
+    extensionRewindForwardPlayerBarButton.setOnClickListener(v -> musicService.rewindOn(Constants.REWIND_TIME));
+    extensionRewindBackPlayerBarButton.setOnClickListener(v -> musicService.rewindOn(-Constants.REWIND_TIME));
+    extensionOptionPLayerBarButton.setOnClickListener(v ->
+            musicService.init(queue -> PlaylistController
+                    .showAudioOptionBottomDialog(MainActivity.this, queue.getCurrentAudio(), musicService)));
+    extensionProgressIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+      boolean isPaused;
+      @Override
+      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser) {
+          musicService.rewindTo(progress);
+        }
+      }
+
+      @Override
+      public void onStartTrackingTouch(SeekBar seekBar) {
+        isPaused = musicService.pauseSeparated();
+      }
+
+      @Override
+      public void onStopTrackingTouch(SeekBar seekBar) {
+        if (isPaused) {
+          musicService.playSeparated();
+        }
+      }
+    });
+    extensionWrapPlayerBarButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+          bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        }
+      }
+    });
   }
 
   private void initBottomNavigation() {
@@ -106,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
       PlaylistLoader.getInstance(getFilesDir().getPath());
     }
     catch (IOException e) {
-      Log.e(LOG_TAG,"IOException: " + e.getCause().toString());
+      Log.e(LOG_TAG, "IOException: " + e.getCause().toString());
       e.printStackTrace();
     }
   }
@@ -127,8 +264,7 @@ public class MainActivity extends AppCompatActivity {
         musicService.addPausedListener(new PausedListener() {
           @Override
           public void onPaused() {
-            ImageButton playButton = findViewById(R.id.player_bar_play_button_id);
-            playButton.setImageResource(R.drawable.round_play_arrow_24);
+            pausePlayerBar();
           }
         });
 
@@ -136,16 +272,18 @@ public class MainActivity extends AppCompatActivity {
           @Override
           public void onChange(AudioQueue queue) {
             updatePlayerBarData(queue);
+            progressIndicator.setProgress(0);
+            extensionProgressIndicator.setProgress(0);
+            extensionCutTime.setText("0:00");
           }
         });
 
-        ImageButton playPlayerBarButton = findViewById(R.id.player_bar_play_button_id);
-        ImageButton prevPlayerBarButton = findViewById(R.id.player_bar_prev_button_id);
-        ImageButton nextPlayerBarButton = findViewById(R.id.player_bar_next_button_id);
-
-        playPlayerBarButton.setOnClickListener(v -> musicService.playOrPause());
-        prevPlayerBarButton.setOnClickListener(v -> musicService.playPrev());
-        nextPlayerBarButton.setOnClickListener(v -> musicService.playNext());
+        musicService.setRewindListener(new RewindListener() {
+          @Override
+          public void onRewinding(MediaPlayer mediaPlayer) {
+            updatePlayerBarProgressIndicator(mediaPlayer);
+          }
+        });
 
         musicServiceBound = true;
       }
@@ -159,11 +297,33 @@ public class MainActivity extends AppCompatActivity {
     bindService(musicServiceIntent, musicServiceConnection, BIND_AUTO_CREATE);
   }
 
+  private void pausePlayerBar() {
+    playPlayerBarButton.setImageResource(R.drawable.round_play_arrow_24);
+
+    //Extension
+    extensionPlayPlayerBarButton.setImageResource(R.drawable.round_play_arrow_32);
+  }
+
   private void startPlayerBar(MediaPlayer mediaPlayer, AudioQueue queue) {
-    ImageButton playButton = findViewById(R.id.player_bar_play_button_id);
-    playButton.setImageResource(R.drawable.baseline_pause_24);
-    LinearProgressIndicator progressIndicator = findViewById(R.id.player_bar_progress_id);
+    if (!isStarted) {
+      playerBarView.setOnTouchListener(null);
+      bottomSheetBehavior.setDraggable(true);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        playerBarView.setRenderEffect(null);
+      }
+      else {
+        playerBarView.setAlpha(1);
+      }
+      isStarted = true;
+    }
+
+    playPlayerBarButton.setImageResource(R.drawable.round_pause_24);
     progressIndicator.setMax(mediaPlayer.getDuration());
+
+    //Extension
+    extensionPlayPlayerBarButton.setImageResource(R.drawable.round_pause_32);
+    extensionProgressIndicator.setMax(mediaPlayer.getDuration());
+    extensionAllTime.setText(convertTimeToString(mediaPlayer.getDuration()));
 
     MainActivity.this.runOnUiThread(new Runnable() {
       @Override
@@ -171,27 +331,20 @@ public class MainActivity extends AppCompatActivity {
         if (!mediaPlayer.isPlaying()) return;
 
         progressIndicator.setProgress(mediaPlayer.getCurrentPosition());
+        extensionProgressIndicator.setProgress(mediaPlayer.getCurrentPosition());
+        extensionCutTime.setText(convertTimeToString(mediaPlayer.getCurrentPosition()));
+
         new Handler().postDelayed(this, 500);
       }
     });
-    if (findViewById(R.id.player_bar).getVisibility() == View.VISIBLE) {
-      return;
-    }
 
-    findViewById(R.id.player_bar).setVisibility(View.VISIBLE);
     updatePlayerBarData(queue);
   }
 
   private void updatePlayerBarData(AudioQueue queue) {
-    LinearProgressIndicator progressIndicator = findViewById(R.id.player_bar_progress_id);
-    TextView title = findViewById(R.id.player_bar_audio_title_id);
-    TextView channel = findViewById(R.id.player_bar_channel_id);
-    ImageView image = findViewById(R.id.player_bar_image_id);
-
     Audio curAudio = queue.getCurrentAudio();
-    title.setText(curAudio.getTitle());
-    channel.setText(curAudio.getChannel());
-    progressIndicator.setProgress(0);
+    titlePLayerBar.setText(curAudio.getTitle());
+    channelPLayerBar.setText(curAudio.getChannel());
     Picasso.get()
             .load(curAudio.getImageURI())
             .centerCrop()
@@ -199,13 +352,44 @@ public class MainActivity extends AppCompatActivity {
                     (int) ((float) curAudio.getWidth() * HEIGHT_RATIO / WIDTH_RATIO))
             .placeholder(R.drawable.outline_music_note_24)
             .noFade()
-            .into(image);
+            .into(imagePlayerBar);
+
+    //Extension
+    extensionTitle.setText(curAudio.getTitle());
+    extensionChannel.setText(curAudio.getChannel());
   }
 
-  private void showBottomDialog() {
-    BottomSheetDialog dialog = new BottomSheetDialog(this);
-    dialog.setContentView(R.layout.player_bottom_sheet);
+  private void updatePlayerBarProgressIndicator(MediaPlayer mediaPlayer) {
+    progressIndicator.setProgress(mediaPlayer.getCurrentPosition());
 
-    dialog.show();
+    //Extension
+    extensionProgressIndicator.setProgress(mediaPlayer.getCurrentPosition());
+    extensionCutTime.setText(convertTimeToString(mediaPlayer.getCurrentPosition()));
+  }
+
+  private static String convertTimeToString(int millis) {
+    StringBuilder stringBuilder = new StringBuilder();
+
+    long days = TimeUnit.MILLISECONDS.toDays(millis);
+    if (days != 0) stringBuilder.append(days).append(":");
+
+    long hours = TimeUnit.MILLISECONDS.toHours(millis) % 24;
+    if (hours == 0 && days != 0) stringBuilder.append("00:");
+    else if (hours != 0 && hours < 10 && days != 0) stringBuilder.append("0").append(hours).append(":");
+    else if (hours != 0) stringBuilder.append(hours).append(":");
+
+    long minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60;
+    if (minutes == 0) {
+      if (hours != 0) stringBuilder.append("00:");
+      else stringBuilder.append("0:");
+    }
+    else if (minutes < 10) stringBuilder.append("0").append(minutes).append(":");
+    else stringBuilder.append(minutes).append(":");
+
+    long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60;
+    if (seconds < 10) stringBuilder.append("0").append(seconds);
+    else stringBuilder.append(seconds);
+
+    return stringBuilder.toString();
   }
 }

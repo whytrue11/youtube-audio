@@ -26,8 +26,8 @@ import com.whytrue.youtubeaudio.callbacks.ChangeQueueListener;
 import com.whytrue.youtubeaudio.callbacks.InitListener;
 import com.whytrue.youtubeaudio.callbacks.PausedListener;
 import com.whytrue.youtubeaudio.callbacks.PlayingListener;
+import com.whytrue.youtubeaudio.callbacks.RewindListener;
 import com.whytrue.youtubeaudio.entities.Audio;
-import com.whytrue.youtubeaudio.ui.adapters.AudioQueueAdapter;
 import com.yausername.youtubedl_android.YoutubeDL;
 import com.yausername.youtubedl_android.YoutubeDLException;
 import com.yausername.youtubedl_android.YoutubeDLRequest;
@@ -59,6 +59,7 @@ public class MusicService
   private List<PausedListener> pausedListeners = new ArrayList<>();
   private List<ChangeCurAudioListener> changeCurAudioListeners = new ArrayList<>();
   private List<ChangeQueueListener> changeQueueListeners = new ArrayList<>();
+  private RewindListener rewindListener;
 
   //Callbacks
   public void init(InitListener initListener) {
@@ -79,6 +80,10 @@ public class MusicService
 
   public void addChangeQueueListener(ChangeQueueListener changeQueueListener) {
     this.changeQueueListeners.add(changeQueueListener);
+  }
+
+  public void setRewindListener(RewindListener rewindListener) {
+    this.rewindListener = rewindListener;
   }
 
   public void removeChangeListener(ChangeCurAudioListener changeCurAudioListener) {
@@ -152,6 +157,20 @@ public class MusicService
     }
   }
 
+  public void playSeparated() {
+    if (state == State.PAUSED || state == State.STOPPED || state == State.PAUSE_ON_PREPARING || state == State.NO_ACTION) {
+      play();
+    }
+  }
+
+  public boolean pauseSeparated() {
+    if (state == State.PLAYING) {
+      pause();
+      return true;
+    }
+    return false;
+  }
+
   public void playNext() {
     if (currentPlaylist.goToNext()) {
       state = State.PREPARING;
@@ -163,10 +182,7 @@ public class MusicService
   }
 
   public void playPrev() {
-    if (mediaPlayer.getCurrentPosition() != 0) {
-      mediaPlayer.seekTo(0);
-    }
-    else if (currentPlaylist.goToPrev()) {
+    if (currentPlaylist.goToPrev()) {
       state = State.PREPARING;
       play();
       for (ChangeCurAudioListener listener: changeCurAudioListeners) {
@@ -175,26 +191,29 @@ public class MusicService
     }
   }
 
-  public void rewindOn(int time) {
-    if (state != State.PLAYING) return;
+  public void rewindTo(int time) {
+    if (state != State.PLAYING && state != State.PAUSED) return;
 
     if (time >= 0 && mediaPlayer.getDuration() >= time) mediaPlayer.seekTo(time);
     else if (mediaPlayer.getDuration() < time) mediaPlayer.seekTo(mediaPlayer.getDuration());
+    if (rewindListener != null) rewindListener.onRewinding(mediaPlayer);
   }
 
-  public void rewindTo(int time) {
-    if (state != State.PLAYING) return;
+  public void rewindOn(int time) {
+    if (state != State.PLAYING && state != State.PAUSED) return;
 
     if (time != 0
-            && mediaPlayer.getCurrentPosition() + time > mediaPlayer.getDuration()
+            && mediaPlayer.getCurrentPosition() + time < mediaPlayer.getDuration()
             && mediaPlayer.getCurrentPosition() + time >= 0) {
-      mediaPlayer.seekTo(time);
+      mediaPlayer.seekTo(mediaPlayer.getCurrentPosition() + time);
     }
     else if (mediaPlayer.getCurrentPosition() + time < 0) mediaPlayer.seekTo(0);
+    if (rewindListener != null) rewindListener.onRewinding(mediaPlayer);
   }
 
   //private Player
   private void play() {
+    if (currentPlaylist.size() == 0) return;
     if (state == State.PAUSED) {
       state = State.PLAYING;
       mediaPlayer.start();
@@ -213,12 +232,18 @@ public class MusicService
       }
       createMediaPlayerIfNeeded();
       extractAudioURLTask = new ExtractAudioURL(currentPlaylist.getCurrentAudio().getId());
-      extractAudioURLTask.execute();
+      try {
+        extractAudioURLTask.execute();
+      }
+      catch (Exception e) {
+        Toast.makeText(getApplicationContext(), "ERROR: " + e.getCause(), Toast.LENGTH_SHORT).show();
+      }
     }
     wifiLock.acquire();
   }
 
   private void pause() {
+    if (currentPlaylist.size() == 0) return;
     if (state == State.PLAYING) {
       state = State.PAUSED;
       mediaPlayer.pause();

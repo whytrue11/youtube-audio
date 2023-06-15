@@ -39,9 +39,10 @@ public class SearcherYT extends AsyncTask<Void, Void, List<Audio>> {
   private AudioHomeAdapter adapter;
   private TextView errorTextView;
   private boolean update;
+  private Utils.ImageQuality imageQuality;
 
   public SearcherYT(Context context, GoogleAccountCredential credential, String searchQuery, ProgressDialog progressDialog,
-                    AudioHomeAdapter adapter, TextView errorTextView, boolean update) {
+                    AudioHomeAdapter adapter, TextView errorTextView, boolean update, Utils.ImageQuality imageQuality) {
     HttpTransport transport = AndroidHttp.newCompatibleTransport();
     JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
     this.service = new com.google.api.services.youtube.YouTube.Builder(
@@ -54,6 +55,7 @@ public class SearcherYT extends AsyncTask<Void, Void, List<Audio>> {
     this.adapter = adapter;
     this.errorTextView = errorTextView;
     this.update = update;
+    this.imageQuality = imageQuality;
   }
 
   @Override
@@ -139,7 +141,7 @@ public class SearcherYT extends AsyncTask<Void, Void, List<Audio>> {
         continue;
       }
 
-      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails());
+      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails(), imageQuality);
 
       Audio audioInfo = new Audio(
               info.getId(),

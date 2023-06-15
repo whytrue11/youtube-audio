@@ -7,19 +7,43 @@ import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
 
 public class Utils {
-  public static Thumbnail imageLoad(ThumbnailDetails thumbnailDetails) {
-    Thumbnail image = thumbnailDetails.getStandard();
-    if (image == null) {
-      image = thumbnailDetails.getMedium();
-    }
-    if (image == null) {
-      image = thumbnailDetails.getDefault();
-    }
-    if (image == null) {
-      image = new Thumbnail();
-      image.setUrl(null);
-      image.setWidth((long) WIDTH_RATIO);
-      image.setHeight((long) HEIGHT_RATIO);
+  public static enum ImageQuality {
+    DEFAULT,
+    MEDIUM,
+    HIGH,
+    STANDARD,
+    MAXRES
+  }
+
+  public static Thumbnail imageLoad(ThumbnailDetails thumbnailDetails, ImageQuality quality) {
+    Thumbnail image = null;
+    switch (quality) {
+      case MAXRES:
+        if (image == null) {
+          image = thumbnailDetails.getMaxres();
+        }
+      case STANDARD:
+        if (image == null) {
+          image = thumbnailDetails.getStandard();
+        }
+      case HIGH:
+        if (image == null) {
+          image = thumbnailDetails.getHigh();
+        }
+      case MEDIUM:
+        if (image == null) {
+          image = thumbnailDetails.getMedium();
+        }
+      case DEFAULT:
+        if (image == null) {
+          image = thumbnailDetails.getDefault();
+        }
+        break;
+      default:
+        image = new Thumbnail();
+        image.setUrl(null);
+        image.setWidth((long) WIDTH_RATIO);
+        image.setHeight((long) HEIGHT_RATIO);
     }
     return image;
   }

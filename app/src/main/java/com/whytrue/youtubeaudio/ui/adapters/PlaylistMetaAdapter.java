@@ -8,6 +8,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -18,17 +19,21 @@ import com.squareup.picasso.Picasso;
 import com.whytrue.youtubeaudio.R;
 import com.whytrue.youtubeaudio.callbacks.ClickPlaylistListener;
 import com.whytrue.youtubeaudio.entities.PlaylistMeta;
+import com.whytrue.youtubeaudio.utils.playlist.PlaylistLoader;
 
+import java.io.IOException;
 import java.util.List;
 
 public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapter.ViewHolder> {
   private List<PlaylistMeta> playlistItems;
   private Context context;
   private ClickPlaylistListener clickPlaylistListener;
+  private TextView text;
 
-  public PlaylistMetaAdapter(List<PlaylistMeta> playlistItems, ClickPlaylistListener clickPlaylistListener) {
+  public PlaylistMetaAdapter(List<PlaylistMeta> playlistItems, ClickPlaylistListener clickPlaylistListener, TextView text) {
     this.playlistItems = playlistItems;
     this.clickPlaylistListener = clickPlaylistListener;
+    this.text = text;
   }
 
   @SuppressLint("NotifyDataSetChanged")
@@ -62,6 +67,15 @@ public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapte
     holder.nameView.setText(playlistItem.getName());
     holder.countView.setText(Integer.toString(playlistItem.getCount()));
     holder.itemView.setOnClickListener(v -> clickPlaylistListener.onClick(playlistItems, position));
+    holder.button.setOnClickListener(v -> {
+      try {
+        PlaylistLoader.getInstance(context.getFilesDir().getPath()).deletePlaylist(playlistItem.getName());
+        removePlaylistItem(playlistItem);
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
 
     Picasso.get()
             .load(playlistItem.getImageURI())
@@ -81,12 +95,24 @@ public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapte
   public static class ViewHolder extends RecyclerView.ViewHolder {
     final ImageView imageView;
     final TextView nameView, countView;
+    final ImageButton button;
 
     ViewHolder(View view) {
       super(view);
-      imageView = view.findViewById(R.id.playlist_image_id);
-      nameView = view.findViewById(R.id.playlist_name_id);
-      countView = view.findViewById(R.id.playlist_audio_count_id);
+      imageView = view.findViewById(R.id.item_playlist_image);
+      nameView = view.findViewById(R.id.item_playlist_name);
+      countView = view.findViewById(R.id.item_playlist_audio_count);
+      button = view.findViewById(R.id.item_playlist_delete_button);
+    }
+  }
+
+  @SuppressLint("NotifyItemRemoved")
+  private void removePlaylistItem(PlaylistMeta playlistItem) {
+    int position = playlistItems.indexOf(playlistItem);
+    if (position != -1) {
+      this.playlistItems.remove(position);
+      notifyItemRemoved(position);
+      if (text != null) text.setText(context.getResources().getString(R.string.playlist_absence));
     }
   }
 }

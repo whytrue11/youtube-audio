@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,9 +35,11 @@ public class AudioDataLoaderYT extends AsyncTask<Void, Void, List<Audio>> {
   private ProgressDialog progressDialog;
   private AudioQueueAdapter adapter;
   private RecyclerView recyclerView;
+  private TextView text;
+  private Utils.ImageQuality imageQuality;
 
   public AudioDataLoaderYT(Context context, GoogleAccountCredential credential, List<String> audiosID, ProgressDialog progressDialog,
-                           AudioQueueAdapter adapter, RecyclerView recyclerView) {
+                           AudioQueueAdapter adapter, RecyclerView recyclerView, TextView text, Utils.ImageQuality imageQuality) {
     HttpTransport transport = AndroidHttp.newCompatibleTransport();
     JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
     this.service = new com.google.api.services.youtube.YouTube.Builder(
@@ -48,6 +51,8 @@ public class AudioDataLoaderYT extends AsyncTask<Void, Void, List<Audio>> {
     this.progressDialog = progressDialog;
     this.adapter = adapter;
     this.recyclerView = recyclerView;
+    this.text = text;
+    this.imageQuality = imageQuality;
   }
 
   @Override
@@ -72,6 +77,11 @@ public class AudioDataLoaderYT extends AsyncTask<Void, Void, List<Audio>> {
   protected void onPostExecute(List<Audio> output) {
     super.onPostExecute(output);
     if (!output.isEmpty()) {
+      adapter.setAudioItems(output);
+      recyclerView.setAdapter(adapter);
+    }
+    else if (text != null) {
+      text.setText(context.getResources().getString(R.string.empty_playlist));
       adapter.setAudioItems(output);
       recyclerView.setAdapter(adapter);
     }
@@ -101,7 +111,7 @@ public class AudioDataLoaderYT extends AsyncTask<Void, Void, List<Audio>> {
             .getItems();
 
     for (Video info : resultsInfo) {
-      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails());
+      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails(), imageQuality);
 
       Audio audioInfo = new Audio(
               info.getId(),

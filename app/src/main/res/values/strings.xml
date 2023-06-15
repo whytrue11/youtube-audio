@@ -31,4 +31,6 @@
     <string name="player_not_active">Player is not active</string>
     <string name="error">Error</string>
     <string name="queue">Queue</string>
+    <string name="wrap_button">Wrap button</string>
+    <string name="empty_playlist">Playlist is empty</string>
 </resources>

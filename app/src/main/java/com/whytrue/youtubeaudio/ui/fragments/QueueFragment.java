@@ -1,6 +1,7 @@
 package com.whytrue.youtubeaudio.ui.fragments;
 
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,10 +53,10 @@ public class QueueFragment extends Fragment {
   @Override
   public void onResume() {
     super.onResume();
-    getMusicService().init((queue -> {
+    getMusicService().init(queue -> {
       scrollToCurrentAudio(queue);
       selectCurrentAudio(queue);
-    }));
+    });
 
     changeCurAudioListener = this::selectCurrentAudio;
     changeQueueListener = this::updateQueue;

@@ -22,8 +22,10 @@ public class PlaylistImagesLoaderYT extends AsyncTask<Void, Void, Void> {
   private static String LOG_TAG = "PlaylistImagesLoaderYT";
   private com.google.api.services.youtube.YouTube service;
   private List<PlaylistMeta> playlistsMeta;
+  private Utils.ImageQuality imageQuality;
 
-  public PlaylistImagesLoaderYT(GoogleAccountCredential credential, List<PlaylistMeta> playlistsMeta) {
+  public PlaylistImagesLoaderYT(GoogleAccountCredential credential, List<PlaylistMeta> playlistsMeta,
+                                Utils.ImageQuality imageQuality) {
     HttpTransport transport = AndroidHttp.newCompatibleTransport();
     JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
     this.service = new com.google.api.services.youtube.YouTube.Builder(
@@ -31,6 +33,7 @@ public class PlaylistImagesLoaderYT extends AsyncTask<Void, Void, Void> {
             .setApplicationName("YouTube Audio")
             .build();
     this.playlistsMeta = playlistsMeta;
+    this.imageQuality = imageQuality;
   }
 
   @Override
@@ -68,7 +71,7 @@ public class PlaylistImagesLoaderYT extends AsyncTask<Void, Void, Void> {
 
     int i = 0;
     for (Video info : resultsInfo) {
-      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails());
+      Thumbnail image = Utils.imageLoad(info.getSnippet().getThumbnails(), imageQuality);
       PlaylistMeta temp = playlistsMeta.get(i++);
       temp.setImageURI(image.getUrl());
       temp.setWidth(image.getWidth());

@@ -24,6 +24,7 @@ import com.whytrue.youtubeaudio.services.MusicService;
 import com.whytrue.youtubeaudio.R;
 import com.whytrue.youtubeaudio.tasks.SearcherYT;
 import com.whytrue.youtubeaudio.ui.adapters.AudioHomeAdapter;
+import com.whytrue.youtubeaudio.utils.Constants;
 
 import java.util.ArrayList;
 
@@ -86,7 +87,7 @@ public class HomeFragment extends Fragment {
         searchTaskYT = new SearcherYT(getContext(), credential,
                 s,
                 progressDialog, homeAdapter,
-                textView, false);
+                textView, false, Constants.HOME_AUDIO_IMAGE_QUALITY);
         searchTaskYT.execute();
         searchView.clearFocus();
         return true;
@@ -113,7 +114,7 @@ public class HomeFragment extends Fragment {
           searchTaskYT = new SearcherYT(getContext(), credential,
                   null,
                   progressDialog, homeAdapter,
-                  textView, true);
+                  textView, true, Constants.HOME_AUDIO_IMAGE_QUALITY);
           searchTaskYT.execute();
           Log.i(LOG_TAG, "Recycler view updated");
         }
@@ -130,7 +131,7 @@ public class HomeFragment extends Fragment {
       searchTaskYT = new SearcherYT(getContext(), credential,
               DEFAULT_SEARCH_QUERY[(int) (Math.random() * DEFAULT_SEARCH_QUERY.length)],
               progressDialog, homeAdapter,
-              view.findViewById(R.id.home_error_text_id), false);
+              view.findViewById(R.id.home_error_text_id), false, Constants.HOME_AUDIO_IMAGE_QUALITY);
       searchTaskYT.execute();
     }
     audioRecyclerView.setAdapter(homeAdapter);
