@@ -5,6 +5,7 @@ import static com.whytrue.youtubeaudio.utils.Constants.API_KEY;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 

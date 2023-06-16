@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,6 +25,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.exoplayer.ExoPlayer;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
   //--Fields
   ImageButton playPlayerBarButton;
   LinearProgressIndicator progressIndicator;
-  TextView titlePLayerBar;
-  TextView channelPLayerBar;
+  TextView titlePlayerBar;
+  TextView channelPlayerBar;
   ImageView imagePlayerBar;
   ImageButton extensionPlayPlayerBarButton;
   SeekBar extensionProgressIndicator;
@@ -120,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
 
     playPlayerBarButton = findViewById(R.id.player_bar_play_button);
     progressIndicator = findViewById(R.id.player_bar_progress);
-    titlePLayerBar = findViewById(R.id.player_bar_audio_title);
-    channelPLayerBar = findViewById(R.id.player_bar_channel);
+    titlePlayerBar = findViewById(R.id.player_bar_audio_title);
+    channelPlayerBar = findViewById(R.id.player_bar_channel);
     imagePlayerBar = findViewById(R.id.player_bar_image);
 
     extensionPlayPlayerBarButton = findViewById(R.id.player_bar_extension_play_button);
@@ -131,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
     extensionTitle = findViewById(R.id.player_bar_extension_audio_title);
     extensionChannel = findViewById(R.id.player_bar_extension_channel);
 
-    //TODO: Сделать нижнюю панель не кликабельной или что-то другое
     playerBarView.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -256,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
 
         musicService.addPlayingListener(new PlayingListener() {
           @Override
-          public void onPlaying(MediaPlayer mediaPlayer, AudioQueue queue) {
+          public void onPlaying(ExoPlayer mediaPlayer, AudioQueue queue) {
             startPlayerBar(mediaPlayer, queue);
           }
         });
@@ -280,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
         musicService.setRewindListener(new RewindListener() {
           @Override
-          public void onRewinding(MediaPlayer mediaPlayer) {
+          public void onRewinding(ExoPlayer mediaPlayer) {
             updatePlayerBarProgressIndicator(mediaPlayer);
           }
         });
@@ -304,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
     extensionPlayPlayerBarButton.setImageResource(R.drawable.round_play_arrow_32);
   }
 
-  private void startPlayerBar(MediaPlayer mediaPlayer, AudioQueue queue) {
+  private void startPlayerBar(ExoPlayer mediaPlayer, AudioQueue queue) {
     if (!isStarted) {
       playerBarView.setOnTouchListener(null);
       bottomSheetBehavior.setDraggable(true);
@@ -318,21 +317,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     playPlayerBarButton.setImageResource(R.drawable.round_pause_24);
-    progressIndicator.setMax(mediaPlayer.getDuration());
+    progressIndicator.setMax((int) mediaPlayer.getDuration());
 
     //Extension
     extensionPlayPlayerBarButton.setImageResource(R.drawable.round_pause_32);
-    extensionProgressIndicator.setMax(mediaPlayer.getDuration());
-    extensionAllTime.setText(convertTimeToString(mediaPlayer.getDuration()));
+    extensionProgressIndicator.setMax((int) mediaPlayer.getDuration());
+    extensionAllTime.setText(convertTimeToString((int) mediaPlayer.getDuration()));
 
     MainActivity.this.runOnUiThread(new Runnable() {
       @Override
       public void run() {
         if (!mediaPlayer.isPlaying()) return;
 
-        progressIndicator.setProgress(mediaPlayer.getCurrentPosition());
-        extensionProgressIndicator.setProgress(mediaPlayer.getCurrentPosition());
-        extensionCutTime.setText(convertTimeToString(mediaPlayer.getCurrentPosition()));
+        progressIndicator.setProgress((int) mediaPlayer.getCurrentPosition());
+        extensionProgressIndicator.setProgress((int) mediaPlayer.getCurrentPosition());
+        extensionCutTime.setText(convertTimeToString((int) mediaPlayer.getCurrentPosition()));
 
         new Handler().postDelayed(this, 500);
       }
@@ -343,8 +342,8 @@ public class MainActivity extends AppCompatActivity {
 
   private void updatePlayerBarData(AudioQueue queue) {
     Audio curAudio = queue.getCurrentAudio();
-    titlePLayerBar.setText(curAudio.getTitle());
-    channelPLayerBar.setText(curAudio.getChannel());
+    titlePlayerBar.setText(curAudio.getTitle());
+    channelPlayerBar.setText(curAudio.getChannel());
     Picasso.get()
             .load(curAudio.getImageURI())
             .centerCrop()
@@ -359,12 +358,12 @@ public class MainActivity extends AppCompatActivity {
     extensionChannel.setText(curAudio.getChannel());
   }
 
-  private void updatePlayerBarProgressIndicator(MediaPlayer mediaPlayer) {
-    progressIndicator.setProgress(mediaPlayer.getCurrentPosition());
+  private void updatePlayerBarProgressIndicator(ExoPlayer mediaPlayer) {
+    progressIndicator.setProgress((int) mediaPlayer.getCurrentPosition());
 
     //Extension
-    extensionProgressIndicator.setProgress(mediaPlayer.getCurrentPosition());
-    extensionCutTime.setText(convertTimeToString(mediaPlayer.getCurrentPosition()));
+    extensionProgressIndicator.setProgress((int) mediaPlayer.getCurrentPosition());
+    extensionCutTime.setText(convertTimeToString((int) mediaPlayer.getCurrentPosition()));
   }
 
   private static String convertTimeToString(int millis) {

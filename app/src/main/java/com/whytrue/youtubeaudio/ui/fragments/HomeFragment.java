@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.whytrue.youtubeaudio.ui.activities.MainActivity;
 import com.whytrue.youtubeaudio.services.MusicService;
@@ -42,6 +43,7 @@ public class HomeFragment extends Fragment {
   private SearcherYT searchTaskYT;
 
   private MusicService musicService;
+  private BottomSheetBehavior slideUpPanelBottomSheetBehavior;
 
   public HomeFragment() {
     // Required empty public constructor
@@ -52,7 +54,7 @@ public class HomeFragment extends Fragment {
     super.onCreate(savedInstanceState);
     progressDialog = new ProgressDialog(getContext());
     progressDialog.setCancelable(false);
-    progressDialog.setMessage("Calling YouTube Data API ...");
+    progressDialog.setMessage(getContext().getResources().getString(R.string.loading));
 
     setHasOptionsMenu(true);
   }
@@ -61,6 +63,18 @@ public class HomeFragment extends Fragment {
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     Log.i(LOG_TAG, "CreateView");
     View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+    slideUpPanelBottomSheetBehavior = BottomSheetBehavior.from(getActivity().findViewById(R.id.slide_up_panel));
+    slideUpPanelBottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @Override
+      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+        homeAdapter.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
+      }
+
+      @Override
+      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+      }
+    });
 
     textView = view.findViewById(R.id.home_error_text_id);
     initRecyclerView(view);
@@ -109,6 +123,7 @@ public class HomeFragment extends Fragment {
       public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
         super.onScrollStateChanged(recyclerView, newState);
 
+        slideUpPanelBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         if (newState == RecyclerView.SCROLL_STATE_IDLE && ((LinearLayoutManager) recyclerView.getLayoutManager())
                 .findLastVisibleItemPosition() == homeAdapter.getItemCount() - 1) {
           searchTaskYT = new SearcherYT(getContext(), credential,

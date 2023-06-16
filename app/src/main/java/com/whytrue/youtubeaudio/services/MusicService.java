@@ -7,10 +7,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnPreparedListener;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.AsyncTask;
@@ -19,6 +15,13 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.OptIn;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.ExoPlayer;
 
 import com.whytrue.youtubeaudio.AudioQueue;
 import com.whytrue.youtubeaudio.callbacks.ChangeCurAudioListener;
@@ -37,16 +40,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class MusicService
-        extends Service
-        implements OnCompletionListener, OnPreparedListener, OnErrorListener {
+public class MusicService extends Service {
   private final static String LOG_TAG = "MusicService";
   private final static String WIFI_LOCK_TAG = "YA_WIFI_LOCK";
 
   private final IBinder binder = new MusicServiceBinder();
   private final AudioQueue currentPlaylist = new AudioQueue(true, "AudioQueue");
 
-  private MediaPlayer mediaPlayer;
+  private ExoPlayer mediaPlayer;
 
   private State state = State.NO_ACTION;
   ExtractAudioURL extractAudioURLTask;
@@ -152,7 +153,7 @@ public class MusicService
     if (state == State.PAUSED || state == State.STOPPED || state == State.PAUSE_ON_PREPARING || state == State.NO_ACTION) {
       play();
     }
-    else if (state == State.PLAYING) {
+    else if (state == State.PLAYING || state == State.PREPARING) {
       pause();
     }
   }
@@ -216,7 +217,7 @@ public class MusicService
     if (currentPlaylist.size() == 0) return;
     if (state == State.PAUSED) {
       state = State.PLAYING;
-      mediaPlayer.start();
+      mediaPlayer.play();
 
       for (PlayingListener listener: playingListeners) {
         listener.onPlaying(mediaPlayer, currentPlaylist);
@@ -264,33 +265,42 @@ public class MusicService
   private void stop() {
     if (mediaPlayer != null) {
       state = State.STOPPED;
-      mediaPlayer.reset();
       releaseResources(false);
     }
   }
 
   //Resources
+  @OptIn(markerClass = UnstableApi.class)
   private void createMediaPlayerIfNeeded() {
     if (mediaPlayer == null) {
-      mediaPlayer = new MediaPlayer();
-      mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+      mediaPlayer = new ExoPlayer.Builder(this).build();
+      mediaPlayer.setWakeMode(PowerManager.PARTIAL_WAKE_LOCK);
 
-      mediaPlayer.setOnPreparedListener(this);
-      mediaPlayer.setOnCompletionListener(this);
-      mediaPlayer.setOnErrorListener(this);
+      mediaPlayer.addListener(new Player.Listener() {
+        @Override
+        public void onPlayerError(PlaybackException error) {
+          onError();
+        }
 
-      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-      mediaPlayer.getAudioSessionId();
+        @Override
+        public void onPlaybackStateChanged(int playbackState) {
+          if (playbackState == ExoPlayer.STATE_ENDED) {
+            onCompletion();
+          }
+          else if (playbackState == ExoPlayer.STATE_READY) {
+            onPrepared();
+          }
+        }
+      });
     }
     else {
-      mediaPlayer.reset();
+      mediaPlayer.stop();
     }
   }
 
   private void releaseResources(boolean releaseMediaPlayer) {
     stopForeground(true);
     if (releaseMediaPlayer && mediaPlayer != null) {
-      mediaPlayer.reset();
       mediaPlayer.release();
       mediaPlayer = null;
     }
@@ -298,31 +308,31 @@ public class MusicService
   }
 
   //MediaPlayer methods
-  public void onCompletion(MediaPlayer player) {
+  public void onCompletion() {
     playNext();
   }
 
-  public void onPrepared(MediaPlayer player) {
+  public void onPrepared() {
     if (state == State.PAUSE_ON_PREPARING) {
       state = State.PAUSED;
+      mediaPlayer.pause();
       return;
     }
 
     state = State.PLAYING;
-    mediaPlayer.start();
+    mediaPlayer.play();
     for (PlayingListener listener: playingListeners) {
       listener.onPlaying(mediaPlayer, currentPlaylist);
     }
   }
 
-  public boolean onError(MediaPlayer mp, int what, int extra) {
+  public void onError() {
     Toast.makeText(getApplicationContext(), "Media player error! Resetting.",
             Toast.LENGTH_SHORT).show();
-    Log.e(LOG_TAG, "Error: what=" + what + ", extra=" + extra);
+    Log.e(LOG_TAG, "Media player error");
     state = State.STOPPED;
     releaseResources(true);
     //giveUpAudioFocus();
-    return true; // true indicates we handled the error
   }
 
   //Service
@@ -365,7 +375,7 @@ public class MusicService
     PAUSE_ON_PREPARING
   }
 
-  private class ExtractAudioURL extends AsyncTask<Void, Void, Void> {
+  private class ExtractAudioURL extends AsyncTask<Void, Void, String> {
     private String videoURL;
 
     public ExtractAudioURL(String videoURL) {
@@ -373,16 +383,20 @@ public class MusicService
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    protected String doInBackground(Void... params) {
       try {
-        mediaPlayer.reset();
-        mediaPlayer.setDataSource(extractAudioURL(videoURL));
-        mediaPlayer.prepareAsync();
+        return extractAudioURL(videoURL);
       }
       catch (Exception e) {
         e.printStackTrace();
       }
       return null;
+    }
+
+    @Override
+    protected void onPostExecute(String audioURL) {
+      mediaPlayer.setMediaItem(MediaItem.fromUri(audioURL));
+      mediaPlayer.prepare();
     }
 
     private String extractAudioURL(String id)

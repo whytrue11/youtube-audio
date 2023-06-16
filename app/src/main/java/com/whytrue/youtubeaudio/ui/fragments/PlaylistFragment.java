@@ -51,7 +51,7 @@ public class PlaylistFragment extends Fragment {
     super.onCreate(savedInstanceState);
     progressDialog = new ProgressDialog(getContext());
     progressDialog.setCancelable(false);
-    progressDialog.setMessage("Calling YouTube Data API ...");
+    progressDialog.setMessage(getContext().getResources().getString(R.string.loading));
 
     actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
     actionBar.setHomeAsUpIndicator(R.drawable.round_arrow_back_24);

@@ -21,6 +21,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageButton
+            android:id="@+id/player_bar_extension_wrap_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="@dimen/small_padding_left_right"
+            android:layout_weight="0.1"
+            android:background="@null"
+            android:contentDescription="@string/wrap_button"
+            android:rotation="-90"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:src="@drawable/round_arrow_back_ios_24">
+
+        </ImageButton>
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -54,20 +69,6 @@
                 android:textSize="14sp" />
 
         </LinearLayout>
-
-        <ImageButton
-            android:id="@+id/player_bar_extension_wrap_button"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.1"
-            android:background="@null"
-            android:contentDescription="@string/wrap_button"
-            android:rotation="-90"
-            android:scaleX="0.7"
-            android:scaleY="0.7"
-            android:src="@drawable/round_arrow_back_ios_24">
-
-        </ImageButton>
     </LinearLayout>
 
     <SeekBar
