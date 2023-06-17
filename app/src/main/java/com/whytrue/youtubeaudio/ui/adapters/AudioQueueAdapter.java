@@ -29,6 +29,7 @@ public class AudioQueueAdapter extends RecyclerView.Adapter<AudioQueueAdapter.Vi
   private Context context;
   private MusicPlayerGetter musicPlayerGetter;
   private ClickAudioListener clickAudioListener;
+  private boolean clickable = true;
 
   public AudioQueueAdapter(List<Audio> audioItems, MusicPlayerGetter musicPlayerGetter, ClickAudioListener clickAudioListener) {
     this.audioItems = audioItems;
@@ -39,6 +40,13 @@ public class AudioQueueAdapter extends RecyclerView.Adapter<AudioQueueAdapter.Vi
   @SuppressLint("NotifyDataSetChanged")
   public void setAudioItems(List<Audio> audioItems) {
     this.audioItems = audioItems;
+    notifyDataSetChanged();
+  }
+
+  @SuppressLint("NotifyDataSetChanged")
+  public void setClickable(boolean clickable) {
+    if (this.clickable == clickable) return;
+    this.clickable = clickable;
     notifyDataSetChanged();
   }
 
@@ -63,6 +71,7 @@ public class AudioQueueAdapter extends RecyclerView.Adapter<AudioQueueAdapter.Vi
     holder.button.setOnClickListener(v -> PlaylistController.
             showAudioOptionBottomDialog(context, audioItem, musicPlayerGetter.getMusicService()));
     holder.itemView.setOnClickListener(v -> clickAudioListener.onClick(audioItems, position));
+    holder.itemView.setClickable(clickable);
 
     Picasso.get()
             .load(audioItem.getImageURI())

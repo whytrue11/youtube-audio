@@ -9,12 +9,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.whytrue.youtubeaudio.R;
 import com.whytrue.youtubeaudio.entities.PlaylistMeta;
 import com.whytrue.youtubeaudio.services.MusicService;
@@ -42,6 +44,9 @@ public class PlaylistFragment extends Fragment {
   private ActionBar actionBar;
   private CharSequence prevTitle;
 
+  //PlayerBar
+  private BottomSheetBehavior slideUpPanelBottomSheetBehavior;
+
   public PlaylistFragment() {
     // Required empty public constructor
   }
@@ -63,6 +68,7 @@ public class PlaylistFragment extends Fragment {
     View view = inflater.inflate(R.layout.fragment_playlist, container, false);
     text = view.findViewById(R.id.playlist_error_text_id);
 
+    initPlayerBar();
     initRecyclerView(view);
 
     Button addPlaylistButton = view.findViewById(R.id.playlist_add_playlist);
@@ -92,6 +98,14 @@ public class PlaylistFragment extends Fragment {
   private void initRecyclerView(View view) {
     recyclerView = view.findViewById(R.id.playlist_list);
 
+    recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+      @Override
+      public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+        super.onScrollStateChanged(recyclerView, newState);
+        if (newState != RecyclerView.SCROLL_STATE_IDLE) slideUpPanelBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+      }
+    });
+
     if (playlistAdapter == null || playlistAdapter.getItemCount() == 0) {
       playlistAdapter = new PlaylistMetaAdapter(new ArrayList<>(),
               (playlists, playlistPos) -> showPlaylistAudios(playlists, playlistPos), text);
@@ -102,6 +116,21 @@ public class PlaylistFragment extends Fragment {
     if (playlistAdapter.getItemCount() == 0) {
       text.setText(R.string.playlist_absence);
     }
+  }
+
+  private void initPlayerBar() {
+    slideUpPanelBottomSheetBehavior = BottomSheetBehavior.from(getActivity().findViewById(R.id.slide_up_panel));
+    slideUpPanelBottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @Override
+      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+        if (queueAdapter != null) queueAdapter.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
+        if (playlistAdapter != null) playlistAdapter.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
+      }
+
+      @Override
+      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+      }
+    });
   }
 
   private void showPlaylistAudios(List<PlaylistMeta> playlists, int playlistPos) {

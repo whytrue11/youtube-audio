@@ -30,7 +30,7 @@ import com.whytrue.youtubeaudio.utils.Constants;
 import java.util.ArrayList;
 
 public class HomeFragment extends Fragment {
-  private static final String[] DEFAULT_SEARCH_QUERY = {"rock music"};
+  private static final String[] DEFAULT_SEARCH_QUERY = {"classic music"};
   private static final String LOG_TAG = "HomeFragment";
   private TextView textView;
 
@@ -64,19 +64,8 @@ public class HomeFragment extends Fragment {
     Log.i(LOG_TAG, "CreateView");
     View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-    slideUpPanelBottomSheetBehavior = BottomSheetBehavior.from(getActivity().findViewById(R.id.slide_up_panel));
-    slideUpPanelBottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-      @Override
-      public void onStateChanged(@NonNull View bottomSheet, int newState) {
-        homeAdapter.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
-      }
-
-      @Override
-      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-      }
-    });
-
     textView = view.findViewById(R.id.home_error_text_id);
+    initPlayerBar();
     initRecyclerView(view);
 
     return view;
@@ -123,7 +112,7 @@ public class HomeFragment extends Fragment {
       public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
         super.onScrollStateChanged(recyclerView, newState);
 
-        slideUpPanelBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        if (newState != RecyclerView.SCROLL_STATE_IDLE) slideUpPanelBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         if (newState == RecyclerView.SCROLL_STATE_IDLE && ((LinearLayoutManager) recyclerView.getLayoutManager())
                 .findLastVisibleItemPosition() == homeAdapter.getItemCount() - 1) {
           searchTaskYT = new SearcherYT(getContext(), credential,
@@ -150,6 +139,20 @@ public class HomeFragment extends Fragment {
       searchTaskYT.execute();
     }
     audioRecyclerView.setAdapter(homeAdapter);
+  }
+
+  private void initPlayerBar() {
+    slideUpPanelBottomSheetBehavior = BottomSheetBehavior.from(getActivity().findViewById(R.id.slide_up_panel));
+    slideUpPanelBottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @Override
+      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+        if (homeAdapter != null) homeAdapter.setClickable(newState != BottomSheetBehavior.STATE_EXPANDED);
+      }
+
+      @Override
+      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+      }
+    });
   }
 
   private MusicService getMusicService() {

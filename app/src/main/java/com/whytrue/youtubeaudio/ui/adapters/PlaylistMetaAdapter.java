@@ -29,6 +29,7 @@ public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapte
   private Context context;
   private ClickPlaylistListener clickPlaylistListener;
   private TextView text;
+  private boolean clickable = true;
 
   public PlaylistMetaAdapter(List<PlaylistMeta> playlistItems, ClickPlaylistListener clickPlaylistListener, TextView text) {
     this.playlistItems = playlistItems;
@@ -39,6 +40,13 @@ public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapte
   @SuppressLint("NotifyDataSetChanged")
   public void setPlaylistItems(List<PlaylistMeta> playlistItems) {
     this.playlistItems = playlistItems;
+    notifyDataSetChanged();
+  }
+
+  @SuppressLint("NotifyDataSetChanged")
+  public void setClickable(boolean clickable) {
+    if (this.clickable == clickable) return;
+    this.clickable = clickable;
     notifyDataSetChanged();
   }
 
@@ -76,6 +84,7 @@ public class PlaylistMetaAdapter extends RecyclerView.Adapter<PlaylistMetaAdapte
         e.printStackTrace();
       }
     });
+    holder.imageView.setClickable(clickable);
 
     Picasso.get()
             .load(playlistItem.getImageURI())
