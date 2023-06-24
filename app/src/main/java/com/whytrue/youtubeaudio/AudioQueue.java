@@ -12,8 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AudioQueue {
-  private String logTag;
   private final List<Audio> list = new ArrayList<>();
+  private String logTag;
   private int currentIndex = -1;
   private boolean repeat;
 

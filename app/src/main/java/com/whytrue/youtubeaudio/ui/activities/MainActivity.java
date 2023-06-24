@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
   private FrameLayout playerBarView;
   private LinearLayout playerBarExtensionView;
   private BottomSheetBehavior bottomSheetBehavior;
-  boolean isStarted = false;
+  boolean isPlayerBarStarted = false;
   //--Fields
   ImageButton playPlayerBarButton;
   LinearProgressIndicator progressIndicator;
@@ -103,17 +103,6 @@ public class MainActivity extends AppCompatActivity {
     musicServiceBound = false;
   }
 
-  public void setClickable(View view, boolean clickable) {
-    if (view != null) {
-      view.setClickable(clickable);
-      if (view instanceof ViewGroup) {
-        ViewGroup vg = ((ViewGroup) view);
-        for (int i = 0; i < vg.getChildCount(); i++) {
-          setClickable(vg.getChildAt(i), clickable);
-        }
-      }
-    }
-  }
   private void initPlayerBar() {
     playerBarView = findViewById(R.id.player_bar_view);
     playerBarExtensionView = findViewById(R.id.player_bar_extension_view);
@@ -304,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void startPlayerBar(ExoPlayer mediaPlayer, AudioQueue queue) {
-    if (!isStarted) {
+    if (!isPlayerBarStarted) {
       playerBarView.setOnTouchListener(null);
       bottomSheetBehavior.setDraggable(true);
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -313,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
       else {
         playerBarView.setAlpha(1);
       }
-      isStarted = true;
+      isPlayerBarStarted = true;
     }
 
     playPlayerBarButton.setImageResource(R.drawable.round_pause_24);

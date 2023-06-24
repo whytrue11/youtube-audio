@@ -308,11 +308,11 @@ public class MusicService extends Service {
   }
 
   //MediaPlayer methods
-  public void onCompletion() {
+  private void onCompletion() {
     playNext();
   }
 
-  public void onPrepared() {
+  private void onPrepared() {
     if (state == State.PAUSE_ON_PREPARING) {
       state = State.PAUSED;
       mediaPlayer.pause();
@@ -326,7 +326,7 @@ public class MusicService extends Service {
     }
   }
 
-  public void onError() {
+  private void onError() {
     Toast.makeText(getApplicationContext(), "Media player error! Resetting.",
             Toast.LENGTH_SHORT).show();
     Log.e(LOG_TAG, "Media player error");
@@ -376,16 +376,16 @@ public class MusicService extends Service {
   }
 
   private class ExtractAudioURL extends AsyncTask<Void, Void, String> {
-    private String videoURL;
+    private String videoID;
 
-    public ExtractAudioURL(String videoURL) {
-      this.videoURL = videoURL;
+    public ExtractAudioURL(String videoID) {
+      this.videoID = videoID;
     }
 
     @Override
     protected String doInBackground(Void... params) {
       try {
-        return extractAudioURL(videoURL);
+        return extractAudioURL(videoID);
       }
       catch (Exception e) {
         e.printStackTrace();

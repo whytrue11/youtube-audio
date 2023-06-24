@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AudioDataLoaderYT extends AsyncTask<Void, Void, List<Audio>> {
-  private static String LOG_TAG = "AudioDataLoaderYT";
+  private static final String LOG_TAG = "AudioDataLoaderYT";
   private com.google.api.services.youtube.YouTube service;
   private Context context;
   private List<String> audiosID;

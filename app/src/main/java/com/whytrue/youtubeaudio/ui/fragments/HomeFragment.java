@@ -32,7 +32,7 @@ import java.util.ArrayList;
 public class HomeFragment extends Fragment {
   private static final String[] DEFAULT_SEARCH_QUERY = {"classic music"};
   private static final String LOG_TAG = "HomeFragment";
-  private TextView textView;
+  private TextView text;
 
   //Recycler view
   private RecyclerView audioRecyclerView;
@@ -64,7 +64,7 @@ public class HomeFragment extends Fragment {
     Log.i(LOG_TAG, "CreateView");
     View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-    textView = view.findViewById(R.id.home_error_text_id);
+    text = view.findViewById(R.id.home_error_text_id);
     initPlayerBar();
     initRecyclerView(view);
 
@@ -90,7 +90,7 @@ public class HomeFragment extends Fragment {
         searchTaskYT = new SearcherYT(getContext(), credential,
                 s,
                 progressDialog, homeAdapter,
-                textView, false, Constants.HOME_AUDIO_IMAGE_QUALITY);
+                text, false, Constants.HOME_AUDIO_IMAGE_QUALITY);
         searchTaskYT.execute();
         searchView.clearFocus();
         return true;
@@ -118,7 +118,7 @@ public class HomeFragment extends Fragment {
           searchTaskYT = new SearcherYT(getContext(), credential,
                   null,
                   progressDialog, homeAdapter,
-                  textView, true, Constants.HOME_AUDIO_IMAGE_QUALITY);
+                  text, true, Constants.HOME_AUDIO_IMAGE_QUALITY);
           searchTaskYT.execute();
           Log.i(LOG_TAG, "Recycler view updated");
         }
