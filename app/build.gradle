@@ -61,7 +61,7 @@ dependencies {
 
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
-    implementation('com.github.yausername.youtubedl-android:library:-SNAPSHOT') {
+    implementation('com.github.yausername.youtubedl-android:library:42c7dfcee1') {
         exclude group: 'com.google.guava'
     }
     implementation 'com.squareup.picasso:picasso:2.8'

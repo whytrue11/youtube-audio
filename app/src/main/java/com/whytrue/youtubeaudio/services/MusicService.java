@@ -400,7 +400,7 @@ public class MusicService extends Service {
     }
 
     private String extractAudioURL(String id)
-            throws YoutubeDL.CanceledException, YoutubeDLException, InterruptedException {
+            throws YoutubeDLException, InterruptedException {
       Log.i(LOG_TAG, "START extract audio");
       YoutubeDLRequest request = new YoutubeDLRequest(START_YOUTUBE_URL + id);
       request.addOption("--extract-audio");
